@@ -4,7 +4,8 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 	"log"
-	"os"
+
+	termbox "github.com/nsf/termbox-go"
 )
 
 const (
@@ -28,25 +29,41 @@ func (cpu *CPU) memoryRead(address uint16) uint16 {
 //====================================================
 
 // LoadProgramImage from the given path
-func (cpu *CPU) LoadProgramImage(path string) {
-	bin, err := ioutil.ReadFile(path)
+func (cpu *CPU) LoadProgramImage(path string) error {
+	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Can't load %s: %s", path, err)
-		os.Exit(1)
+		return err
 	}
 
 	// load into the CPU memory
-	origin := binary.BigEndian.Uint16(bin[:2])
-	for i := 2; i < len(bin); i += 2 {
-		cpu.Memory[origin] = binary.BigEndian.Uint16(bin[i : i+2])
+	origin := binary.BigEndian.Uint16(bytes[:2])
+	for i := 2; i < len(bytes); i += 2 {
+		cpu.Memory[origin] = binary.BigEndian.Uint16(bytes[i : i+2])
 		origin++
+	}
+	return nil
+}
+
+// KBinputLoop is a keyboard input processing loop
+func (cpu *CPU) KBinputLoop() {
+	for {
+		switch event := termbox.PollEvent(); event.Type {
+		case termbox.EventKey:
+			cpu.KeysBuffer = append(cpu.KeysBuffer, event.Ch)
+			switch {
+			case event.Ch == 'q' || event.Key == termbox.KeyEsc || event.Key == termbox.KeyCtrlC || event.Key == termbox.KeyCtrlD:
+				// terminate the CPU processes
+				cpu.Stop()
+				return
+			}
+		}
 	}
 }
 
-// ProcessKBInput process any keyboard input
-func (cpu *CPU) ProcessKBInput() {
+func (cpu *CPU) processKBInput() {
 	valOfKBSR := cpu.memoryRead(KBSR)
-	isKBSRready := (valOfKBSR & 0x8000) == 0
+	isKBSRready := ((valOfKBSR & 0x8000) == 0)
 	if isKBSRready && len(cpu.KeysBuffer) > 0 {
 		cpu.memoryWrite(KBSR, valOfKBSR|0x8000)
 		cpu.memoryWrite(KBDR, uint16(cpu.KeysBuffer[0]))

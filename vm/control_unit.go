@@ -1,6 +1,8 @@
 package vm
 
-import "log"
+import (
+	"log"
+)
 
 const (
 	// FLGPOS for 'Positive' result
@@ -11,61 +13,78 @@ const (
 	FLGNEG uint16 = 1 << 2
 )
 
-type opcodes struct {
-	BR   uint16 // 0  ~> branch
-	ADD  uint16 // 1  ~> add
-	LD   uint16 // 2  ~> load
-	ST   uint16 // 3  ~> store
-	JSR  uint16 // 4  ~> jump register
-	AND  uint16 // 5  ~> bitwise and
-	LDR  uint16 // 6  ~> load register
-	STR  uint16 // 7  ~> store register
-	RTI  uint16 // 8  ~> unused
-	NOT  uint16 // 9  ~> bitwise not
-	LDI  uint16 // 10 ~> load indirect
-	STI  uint16 // 11 ~> store indirect
-	JMP  uint16 // 12 ~> jump
-	RES  uint16 // 13 ~> reserved (unused)
-	LEA  uint16 // 14 ~> load effective address
-	TRAP uint16 // 15 ~> execute trap
-}
+// Operation codes
+const (
+	// BR 0  ~> branch
+	BR uint16 = iota
+	// ADD 1  ~> add
+	ADD uint16 = iota
+	// LD 2  ~> load
+	LD uint16 = iota
+	// ST 3  ~> store
+	ST uint16 = iota
+	// JSR 4  ~> jump register
+	JSR uint16 = iota
+	// AND 5  ~> bitwise and
+	AND uint16 = iota
+	// LDR 6  ~> load register
+	LDR uint16 = iota
+	// STR 7  ~> store register
+	STR uint16 = iota
+	// RTI 8  ~> unused
+	RTI uint16 = iota
+	// NOT 9  ~> bitwise not
+	NOT uint16 = iota
+	// LDI 10 ~> load indirect
+	LDI uint16 = iota
+	// STI 11 ~> store indirect
+	STI uint16 = iota
+	// JMP 12 ~> jump
+	JMP uint16 = iota
+	// RES 13 ~> reserved (unused)
+	RES uint16 = iota
+	// LEA 14 ~> load effective address
+	LEA uint16 = iota
+	// TRAP 15 ~> execute trap
+	TRAP uint16 = iota
+)
 
 func (cpu *CPU) executeInstruction() {
-	// FETCH
-	var instr uint16 = cpu.memoryRead(cpu.Registers[cpu.PC])
+	// fetch
+	var instr uint16 = cpu.memoryRead(cpu.PC)
 	var op uint16 = instr >> 12
-	cpu.Registers[cpu.PC]++
+	cpu.PC++
 
 	switch op {
-	case cpu.Opcodes.BR:
+	case BR:
 		cpu.branch(instr)
-	case cpu.Opcodes.ADD:
+	case ADD:
 		cpu.add(instr)
-	case cpu.Opcodes.LD:
+	case LD:
 		cpu.load(instr)
-	case cpu.Opcodes.ST:
+	case ST:
 		cpu.store(instr)
-	case cpu.Opcodes.JSR:
+	case JSR:
 		cpu.jumpRegister(instr)
-	case cpu.Opcodes.AND:
+	case AND:
 		cpu.bitwiseAnd(instr)
-	case cpu.Opcodes.LDR:
+	case LDR:
 		cpu.loadRegister(instr)
-	case cpu.Opcodes.STR:
+	case STR:
 		cpu.storeRegister(instr)
-	case cpu.Opcodes.RTI: // default (unused)
-	case cpu.Opcodes.NOT:
+	case RTI: // default (unused)
+	case NOT:
 		cpu.bitwiseNot(instr)
-	case cpu.Opcodes.LDI:
+	case LDI:
 		cpu.loadIndirect(instr)
-	case cpu.Opcodes.STI:
+	case STI:
 		cpu.storeIndirect(instr)
-	case cpu.Opcodes.JMP:
+	case JMP:
 		cpu.jump(instr)
-	case cpu.Opcodes.RES: // default (unused)
-	case cpu.Opcodes.LEA:
+	case RES: // default (unused)
+	case LEA:
 		cpu.loadEffectiveAdress(instr)
-	case cpu.Opcodes.TRAP:
+	case TRAP:
 		cpu.trap(instr)
 	default: // default (not implemented)
 		log.Printf("Operation code not implemented: 0x%04X", instr)
@@ -77,8 +96,8 @@ func (cpu *CPU) executeInstruction() {
 func (cpu *CPU) branch(instr uint16) {
 	var pcOffset uint16 = signExtend(instr&0x1FF, 9)
 	var condFlag = (instr >> 9) & 0x7
-	if condFlag&cpu.Registers[cpu.COND] != 0 {
-		cpu.Registers[cpu.PC] += pcOffset
+	if (condFlag & cpu.COND) != 0 {
+		cpu.PC += pcOffset
 	}
 }
 
@@ -114,10 +133,10 @@ func (cpu *CPU) jumpRegister(instr uint16) {
 	cpu.Registers[7] = cpu.PC
 	if longFlag != 0 {
 		var longPcOffset uint16 = signExtend(instr&0x7FF, 11)
-		cpu.Registers[cpu.PC] += longPcOffset
+		cpu.PC += longPcOffset
 	} else {
 		var r1 uint16 = (instr >> 6) & 0x7
-		cpu.Registers[cpu.PC] = cpu.Registers[r1]
+		cpu.PC = cpu.Registers[r1]
 	}
 }
 
@@ -159,7 +178,7 @@ func (cpu *CPU) bitwiseNot(instr uint16) {
 func (cpu *CPU) loadIndirect(instr uint16) {
 	var r0 uint16 = (instr >> 9) & 0x7
 	var pcOffset uint16 = signExtend(instr&0x1FF, 9)
-	cpu.Registers[r0] = cpu.memoryRead(cpu.PC + pcOffset)
+	cpu.Registers[r0] = cpu.memoryRead(cpu.memoryRead(cpu.PC + pcOffset))
 	cpu.updateFlags(r0)
 }
 
@@ -184,7 +203,7 @@ func (cpu *CPU) loadEffectiveAdress(instr uint16) {
 //========================================
 
 func signExtend(x uint16, bitCount int) uint16 {
-	if (x>>(bitCount-1))&1 != 0 {
+	if ((x >> (bitCount - 1)) & 1) != 0 {
 		x |= (0xFFFF << bitCount)
 	}
 	return x

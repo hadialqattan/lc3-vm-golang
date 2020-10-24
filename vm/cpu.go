@@ -1,13 +1,13 @@
 package vm
 
 import (
+	"errors"
 	"math"
 )
 
 // CPU is a LC-3 CPU emulator.
 type CPU struct {
 	Memory     [math.MaxUint16 + 1]uint16 // 65536 locations (128kb)
-	Opcodes    opcodes                    // 16 instruction
 	KeysBuffer []rune                     // Key Buffer
 	IsRunning  bool                       // Run state
 
@@ -29,13 +29,13 @@ func NewCPU() *CPU {
 // Run executes the loaded program
 func (cpu *CPU) Run() error {
 	if len(cpu.Memory) < 1 {
-		return errNoProgram
+		return errors.New("No program loaded")
 	}
 
 	cpu.IsRunning = true
 	for cpu.IsRunning {
 		// process any keyboard input
-		cpu.ProcessKBInput()
+		cpu.processKBInput()
 
 		// execute the current instruction
 		cpu.executeInstruction()
