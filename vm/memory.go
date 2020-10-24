@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 const (
@@ -24,24 +25,26 @@ func (cpu *CPU) memoryRead(address uint16) uint16 {
 	return uint16(cpu.Memory[address])
 }
 
-func (cpu *CPU) loadProgramImage(path string) error {
+//====================================================
+
+// LoadProgramImage from the given path
+func (cpu *CPU) LoadProgramImage(path string) {
 	bin, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Can't load %s: %s", path, err)
-		return err
+		os.Exit(1)
 	}
 
-	// Load into the CPU memory
+	// load into the CPU memory
 	origin := binary.BigEndian.Uint16(bin[:2])
 	for i := 2; i < len(bin); i += 2 {
 		cpu.Memory[origin] = binary.BigEndian.Uint16(bin[i : i+2])
 		origin++
 	}
-
-	return nil
 }
 
-func (cpu *CPU) processKBInput() {
+// ProcessKBInput process any keyboard input
+func (cpu *CPU) ProcessKBInput() {
 	valOfKBSR := cpu.memoryRead(KBSR)
 	isKBSRready := (valOfKBSR & 0x8000) == 0
 	if isKBSRready && len(cpu.KeysBuffer) > 0 {

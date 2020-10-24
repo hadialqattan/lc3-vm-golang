@@ -35,7 +35,7 @@ func (cpu *CPU) Run() error {
 	cpu.IsRunning = true
 	for cpu.IsRunning {
 		// process any keyboard input
-		cpu.processKBInput()
+		cpu.ProcessKBInput()
 
 		// execute the current instruction
 		cpu.executeInstruction()
@@ -48,6 +48,4 @@ func (cpu *CPU) Run() error {
 }
 
 // Stop emulates the termination signal
-func (cpu *CPU) Stop() {
-	cpu.IsRunning = false
-}
+func (cpu *CPU) Stop() { cpu.IsRunning = false }
