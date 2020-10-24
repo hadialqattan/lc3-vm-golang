@@ -29,7 +29,7 @@ type opcodes struct {
 	TRAP uint16 // 15 ~> execute trap
 }
 
-func (cpu *CPU) instructionEmulator() {
+func (cpu *CPU) executeInstruction() {
 	// FETCH
 	var instr uint16 = cpu.memoryRead(cpu.Registers[cpu.PC])
 	var op uint16 = instr >> 12

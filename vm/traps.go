@@ -43,13 +43,13 @@ func (cpu *CPU) trap(instr uint16) {
 func (cpu *CPU) getc() {
 	// block until a key is pressed
 	for {
-		if len(cpu.keyBuffer) > 0 {
+		if len(cpu.keysBuffer) > 0 {
 			break
 		}
 		time.Sleep(time.Millisecond)
 	}
-	// pop a char from the `keyBuffer` queue into register 0
-	cpu.Registers[0], cpu.keyBuffer = uint16(cpu.keyBuffer[0]), cpu.keyBuffer[1:]
+	// pop a char from the `keysBuffer` queue into register 0
+	cpu.Registers[0], cpu.keysBuffer = uint16(cpu.keysBuffer[0]), cpu.keysBuffer[1:]
 }
 
 func (cpu *CPU) out() {
