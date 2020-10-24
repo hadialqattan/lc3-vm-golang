@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/binary"
 	"io/ioutil"
+	"log"
 )
 
 const (
@@ -26,9 +27,11 @@ func (cpu *CPU) memoryRead(address uint16) uint16 {
 func (cpu *CPU) loadProgramImage(path string) error {
 	bin, err := ioutil.ReadFile(path)
 	if err != nil {
+		log.Printf("Can't load %s: %s", path, err)
 		return err
 	}
 
+	// Load into the CPU memory
 	origin := binary.BigEndian.Uint16(bin[:2])
 	for i := 2; i < len(bin); i += 2 {
 		cpu.Memory[origin] = binary.BigEndian.Uint16(bin[i : i+2])
@@ -41,8 +44,8 @@ func (cpu *CPU) loadProgramImage(path string) error {
 func (cpu *CPU) processKBInput() {
 	valOfKBSR := cpu.memoryRead(KBSR)
 	isKBSRready := (valOfKBSR & 0x8000) == 0
-	if isKBSRready && len(cpu.keysBuffer) > 0 {
+	if isKBSRready && len(cpu.KeysBuffer) > 0 {
 		cpu.memoryWrite(KBSR, valOfKBSR|0x8000)
-		cpu.memoryWrite(KBDR, uint16(cpu.keysBuffer[0]))
+		cpu.memoryWrite(KBDR, uint16(cpu.KeysBuffer[0]))
 	}
 }

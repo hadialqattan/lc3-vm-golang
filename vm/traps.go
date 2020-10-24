@@ -2,10 +2,10 @@ package vm
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
-// Traps
 const (
 	// GETC to get character from keyboard, not echoed onto the terminal
 	GETC uint16 = 0x20
@@ -35,6 +35,8 @@ func (cpu *CPU) trap(instr uint16) {
 		cpu.putsp()
 	case HALT:
 		cpu.halt()
+	default:
+		log.Printf("Trap code not implemented: 0x%04X", instr)
 	}
 }
 
@@ -43,13 +45,13 @@ func (cpu *CPU) trap(instr uint16) {
 func (cpu *CPU) getc() {
 	// block until a key is pressed
 	for {
-		if len(cpu.keysBuffer) > 0 {
+		if len(cpu.KeysBuffer) > 0 {
 			break
 		}
 		time.Sleep(time.Millisecond)
 	}
-	// pop a char from the `keysBuffer` queue into register 0
-	cpu.Registers[0], cpu.keysBuffer = uint16(cpu.keysBuffer[0]), cpu.keysBuffer[1:]
+	// pop a char from the `KeysBuffer` queue into register 0
+	cpu.Registers[0], cpu.KeysBuffer = uint16(cpu.KeysBuffer[0]), cpu.KeysBuffer[1:]
 }
 
 func (cpu *CPU) out() {
@@ -72,5 +74,5 @@ func (cpu *CPU) in() {}
 func (cpu *CPU) putsp() {}
 
 func (cpu *CPU) halt() {
-	cpu.stop()
+	cpu.Stop()
 }

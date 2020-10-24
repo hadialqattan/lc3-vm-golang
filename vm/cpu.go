@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"errors"
 	"math"
 )
 
@@ -9,7 +8,7 @@ import (
 type CPU struct {
 	Memory     [math.MaxUint16 + 1]uint16 // 65536 locations (128kb)
 	Opcodes    opcodes                    // 16 instruction
-	keysBuffer []rune                     // Key Buffer
+	KeysBuffer []rune                     // Key Buffer
 	IsRunning  bool                       // Run state
 
 	// 10 total registers.
@@ -18,7 +17,7 @@ type CPU struct {
 	COND      uint16    // condition flags
 }
 
-// NewCPU ~> Create new LC-3 CPU.
+// NewCPU initialize a new LC3 CPU
 func NewCPU() *CPU {
 	cpu := &CPU{}
 	// set the PC to starting position
@@ -27,21 +26,28 @@ func NewCPU() *CPU {
 	return cpu
 }
 
-func (cpu *CPU) run() error {
+// Run executes the loaded program
+func (cpu *CPU) Run() error {
 	if len(cpu.Memory) < 1 {
-		return errors.New("TODO: NOPROG HAS LOADED")
+		return errNoProgram
 	}
 
 	cpu.IsRunning = true
 	for cpu.IsRunning {
+		// process any keyboard input
 		cpu.processKBInput()
+
+		// execute the current instruction
 		cpu.executeInstruction()
+
+		// increment MCC
 		cpu.Memory[0xFFFF]++
 	}
 
 	return nil
 }
 
-func (cpu *CPU) stop() {
+// Stop emulates the termination signal
+func (cpu *CPU) Stop() {
 	cpu.IsRunning = false
 }

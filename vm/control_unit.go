@@ -1,6 +1,7 @@
 package vm
 
-// Flags
+import "log"
+
 const (
 	// FLGPOS for 'Positive' result
 	FLGPOS uint16 = 1 << 0
@@ -66,7 +67,8 @@ func (cpu *CPU) executeInstruction() {
 		cpu.loadEffectiveAdress(instr)
 	case cpu.Opcodes.TRAP:
 		cpu.trap(instr)
-	default: // default (unused)
+	default: // default (not implemented)
+		log.Printf("Operation code not implemented: 0x%04X", instr)
 	}
 }
 
