@@ -1,6 +1,6 @@
 # LC-3 VM
 
-![LC-3 VM by Hadi Alqattan](docs/carbon-lc3-vm.png)
+![LC-3 VM by Hadi Alqattan](docs/carbon.png)
 
 [LC-3](https://en.wikipedia.org/wiki/LC-3) VM written in Go. LC-3 or Little Computer 3 is
 a fictional computer system that is designed to teach students how to code in assembly language.
